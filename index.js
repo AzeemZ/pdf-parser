@@ -1,34 +1,37 @@
 const fs = require("fs");
-const PDFParser = require("pdf2json");
+const pdf = require("pdf-parse");
 
-const pdfParser = new PDFParser(this, 1);
+let dataBuffer = fs.readFileSync("pdf-file.pdf");
 
-pdfParser.on("pdfParser_dataError", (errData) =>
-  console.error(errData.parseError)
-);
-pdfParser.on("pdfParser_dataReady", (pdfData) => {
-  // fs.writeFile("./content.txt", pdfParser.getRawTextContent(), () => {
-  //   console.log("Done.");
-  // });
-  let count = 0;
-  pdfParser.data.Pages.map(({ Texts }) => {
-    Texts.map(({ R }) => {
-      const value = R[0].T;
+pdf(dataBuffer).then(function (data) {
+  try {
+    fs.rmSync("parsed-data.csv");
+  } catch (err) {
+    console.error("File does not exit!");
+  }
 
-      if (!isNaN(value) && parseInt(value) !== 0 && value.length >= 4) {
-        count++;
-        fs.appendFileSync("./content.csv", `${value}\n`, "utf-8");
-      }
+  const dataArr = data.text.split("\n");
 
-      // if (isNaN(value) && value.includes("%20") && value.includes("%2C")) {
-      //   const decodedValue = decodeURIComponent(value);
-      //   if (!isNaN(parseFloat(decodedValue))) {
-      //     fs.appendFileSync("./content.csv", `${value}\n`, "utf-8");
-      //   }
-      // }
-    });
+  dataArr.forEach((value, index) => {
+    if (value.includes("CASH DEPOSIT")) {
+      fs.appendFileSync(
+        "parsed-data.csv",
+        `${value.replace("CASH DEPOSIT", "")}, ${dataArr[index - 3]
+          .replace(",", "")
+          .replace(".00", "")}\n`
+      );
+    }
+
+    if (
+      value.includes("FUND TRANSFER") &&
+      !value.replace("FUND TRANSFER", "").includes(".00")
+    ) {
+      fs.appendFileSync(
+        "parsed-data.csv",
+        `${value.replace("FUND TRANSFER", "")}, ${dataArr[index - 3]
+          .replace(",", "")
+          .replace(".00", "")}\n`
+      );
+    }
   });
-  console.log(count);
 });
-
-pdfParser.loadPDF("./pdf-file.pdf");
