@@ -10,8 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "pdf-parse": "^1.1.1",
-    "pdf2json": "^2.0.1",
-    "pdfreader": "^2.0.0"
+    "pdf-parse": "^1.1.1"
   }
 }
